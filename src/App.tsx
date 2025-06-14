@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 // Define card type
@@ -12,14 +12,14 @@ const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
 const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const deck: Card[] = suits.flatMap(suit => values.map(value => ({ suit, value })));
 
-// Styled components
-const Container = styled.div`
+// Styled components with Telegram theme support
+const Container = styled.div<{ bgColor: string }>`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #f0f2f5; /* Telegram-like background */
+  background-color: ${props => props.bgColor};
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 `;
 
@@ -37,7 +37,7 @@ const Deck = styled.div`
   }
 `;
 
-const Card = styled.div`
+const Card = styled.div<{ textColor: string }>`
   width: 120px;
   height: 180px;
   background-color: white;
@@ -47,7 +47,7 @@ const Card = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #333;
+  color: ${props => props.textColor};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.5s;
   transform: translateY(20px);
@@ -55,6 +55,23 @@ const Card = styled.div`
 
 const App: React.FC = () => {
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
+  const [theme, setTheme] = useState({ bgColor: '#f0f2f5', textColor: '#333' });
+
+  // Initialize Telegram Web App
+  useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      webApp.ready();
+      // Set theme based on Telegram's color scheme
+      const themeParams = webApp.themeParams;
+      setTheme({
+        bgColor: themeParams.bg_color || '#f0f2f5',
+        textColor: themeParams.text_color || '#333',
+      });
+      // Expand to full screen
+      webApp.expand();
+    }
+  }, []);
 
   const handleClick = () => {
     if (currentCard) {
@@ -68,9 +85,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <Container>
+    <Container bgColor={theme.bgColor}>
       {currentCard ? (
-        <Card onClick={handleClick}>
+        <Card textColor={theme.textColor} onClick={handleClick}>
           {currentCard.value} of {currentCard.suit}
         </Card>
       ) : (
